@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knight Auto CRM · 半导体销售漏斗与价值定价演示</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@600;700&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand-950:#2A0650; --brand-900:#3D0A70; --brand-800:#4A0C8C; --brand-700:#6B1FB8;
+  --brand-600:#7B30D8; --brand-500:#9A5CF0; --brand-300:#C7B3F7; --brand-100:#F3E4FF;
+  --ink:#344054; --ink-2:#5A667A; --ink-3:#8491A5;
+  --line:#E4E7EC; --bg:#F7F7F9; --card:#FFFFFF;
+  --green:#0E9F6E; --green-soft:#E3F5EE; --red:#E5484D; --red-soft:#FDEBEC;
+  --radius:12px;
+  --shadow:0 1px 2px rgba(42,6,80,.05), 0 6px 18px rgba(42,6,80,.07);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{font-family:'Geologica',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3,.kpi-value,.funnel-label,.pain-title,.path-step strong,.spin-card .st{font-family:'Funnel Display','Geologica',-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+button{font:inherit;cursor:pointer}
+input,select,textarea{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font:inherit;color:var(--ink);background:#fff;outline:none;transition:border-color .15s, box-shadow .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--brand-600);box-shadow:0 0 0 3px rgba(123,48,216,.14)}
+textarea{resize:vertical}
+
+/* ---------- 布局 ---------- */
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:232px;background:linear-gradient(180deg,var(--brand-950),var(--brand-800));color:#fff;display:flex;flex-direction:column;z-index:20}
+.brand{display:flex;align-items:center;gap:11px;padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,.10)}
+.brand-mark{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#8B5CF6,#7B30D8);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;letter-spacing:.02em;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.brand-text{display:flex;flex-direction:column;line-height:1.25}
+.brand-text strong{font-size:14.5px;font-weight:700;letter-spacing:.01em}
+.brand-text span{font-size:11px;color:#C9B3E8;letter-spacing:.08em;text-transform:uppercase}
+.sidebar nav{padding:14px 12px;display:flex;flex-direction:column;gap:4px;flex:1}
+.nav-item{display:flex;align-items:center;gap:11px;padding:10px 13px;border-radius:9px;color:#C9B3E8;font-size:14px;font-weight:500;cursor:pointer;transition:background .15s,color .15s;text-decoration:none}
+.nav-item svg{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-item.active{background:rgba(255,255,255,.14);color:#fff;font-weight:600}
+.sidebar-foot{padding:16px 20px;font-size:11px;color:#A98FD0;border-top:1px solid rgba(255,255,255,.10)}
+
+.main{margin-left:232px;min-height:100vh;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:flex-end;justify-content:space-between;padding:26px 32px 14px}
+.topbar h1{font-size:22px;font-weight:700;color:var(--brand-900);letter-spacing:-.01em}
+.topbar p{font-size:13px;color:var(--ink-3);margin-top:2px}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:7px 13px;background:#fff;border:1px solid var(--line);border-radius:999px;font-size:12.5px;color:var(--ink-2);box-shadow:var(--shadow)}
+.content{padding:4px 32px 40px;max-width:1320px;width:100%}
+
+.page{display:none}
+.page.active{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ---------- 通用组件 ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.card-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line)}
+.card-head h3{font-size:15px;font-weight:700;color:var(--brand-900)}
+.hint{font-size:12px;color:var(--ink-3)}
+.card-body{padding:18px 20px}
+.link-btn{background:none;border:none;color:var(--brand-600);font-size:13px;font-weight:600;cursor:pointer}
+.link-btn:hover{text-decoration:underline}
+
+.btn-primary{background:var(--brand-800);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-weight:600;font-size:13.5px;transition:background .15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary:hover{background:var(--brand-700)}
+.btn-ghost{background:#fff;color:var(--ink-2);border:1px solid var(--line);border-radius:8px;padding:9px 16px;font-weight:600;font-size:13.5px;transition:border-color .15s,color .15s}
+.btn-ghost:hover{border-color:#C9B3E8;color:var(--ink)}
+.btn-block{width:100%;justify-content:center}
+.btn-danger-text{background:none;border:none;color:var(--red);font-size:13px;font-weight:600;padding:4px 6px;border-radius:6px}
+.btn-danger-text:hover{background:var(--red-soft)}
+
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+
+.avatar{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--brand-700),var(--brand-500));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none}
+.cell-company{display:flex;align-items:center;gap:11px}
+.cell-company strong{font-weight:600;font-size:13.5px}
+.cell-company .sub{display:block;font-size:11.5px;color:var(--ink-3)}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--ink-3)}
+
+.empty{text-align:center;color:var(--ink-3);padding:46px 20px;font-size:13.5px}
+.empty.big{padding:80px 30px;font-size:14px;line-height:2}
+
+/* ---------- 看板 ---------- */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px}
+.kpi-label{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.kpi-value{font-size:27px;font-weight:700;color:var(--brand-900);margin-top:7px;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.kpi-sub{font-size:12px;color:var(--ink-3);margin-top:5px}
+.kpi-sub b{color:var(--brand-600);font-weight:600}
+.funnel-card{margin-bottom:18px}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:1080px){.dash-grid{grid-template-columns:1fr}}
+
+/* 漏斗形状：逐级收窄的梯形段 */
+.funnel-chart{padding:14px 20px 6px}
+.fstage{display:grid;grid-template-columns:176px 1fr 160px;gap:14px;align-items:center}
+.fstage + .fstage{margin-top:5px}
+.funnel-label{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--ink);white-space:nowrap}
+.funnel-label .prob{font-size:11px;color:var(--ink-3);font-weight:600;background:#EEF1F6;border-radius:6px;padding:1px 7px}
+.fseg-wrap{display:flex;align-items:center;justify-content:center;height:42px}
+.fseg{height:42px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;clip-path:polygon(0 0,100% 0,92% 100%,8% 100%);min-width:76px;transition:width .5s ease;box-shadow:inset 0 1px 0 rgba(255,255,255,.28)}
+.funnel-value{text-align:right}
+.funnel-value strong{display:block;font-size:13.5px;color:var(--brand-900);font-variant-numeric:tabular-nums}
+.funnel-value .conv{font-size:11px;color:var(--ink-3)}
+.funnel-summary{display:flex;gap:22px;padding:14px 20px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--ink-2)}
+.funnel-summary b{color:var(--brand-900)}
+
+.source-row{display:grid;grid-template-columns:118px 1fr 44px;gap:10px;align-items:center;margin:11px 0}
+.source-name{font-size:12.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.source-track{height:16px;background:#EEF1F6;border-radius:8px;overflow:hidden}
+.source-bar{height:100%;border-radius:8px;transition:width .5s ease}
+.source-count{font-size:12px;color:var(--ink-3);text-align:right;font-variant-numeric:tabular-nums}
+
+.recent-row{display:flex;align-items:center;gap:13px;padding:12px 20px;border-bottom:1px solid var(--line);transition:background .15s}
+.recent-row:last-child{border-bottom:none}
+.recent-row:hover{background:#F8F6FC}
+.recent-main{flex:1;min-width:0}
+.recent-main strong{font-size:13.5px;font-weight:600;display:block}
+.recent-main .sub{font-size:12px;color:var(--ink-3)}
+.recent-val{font-size:13px;font-weight:600;color:var(--brand-900);font-variant-numeric:tabular-nums}
+
+/* ---------- 线索表 ---------- */
+.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.toolbar input{max-width:280px}
+.toolbar select{width:auto;min-width:130px}
+.toolbar .spacer{flex:1}
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:980px}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);cursor:pointer;user-select:none;white-space:nowrap}
+th:hover{color:var(--ink-2)}
+th .arr{font-size:9px;margin-left:3px;color:var(--brand-600)}
+td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr{cursor:pointer;transition:background .12s}
+tbody tr:hover{background:#F8F6FC}
+.row-actions{display:flex;gap:2px;opacity:0;transition:opacity .15s}
+tbody tr:hover .row-actions{opacity:1}
+.row-actions button{background:none;border:none;color:var(--ink-2);font-size:12.5px;font-weight:600;padding:4px 7px;border-radius:6px}
+.row-actions button:hover{background:#EFE6FA;color:var(--brand-800)}
+.row-actions .del:hover{background:var(--red-soft);color:var(--red)}
+
+/* ---------- 价值销售 ---------- */
+.value-grid{display:grid;grid-template-columns:410px 1fr;gap:18px;align-items:start}
+@media(max-width:1080px){.value-grid{grid-template-columns:1fr}}
+.vf label{display:block;font-size:12px;font-weight:700;color:var(--ink-2);margin:14px 0 5px}
+.vf .card-body{padding:18px 20px 22px}
+details.adv{margin-top:16px;background:#F8F6FC;border:1px solid var(--line);border-radius:9px;padding:10px 14px}
+details.adv summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+details.adv p{margin-top:8px}
+.out-section{margin-top:24px}
+.out-section h4{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-3);margin-bottom:11px;display:flex;align-items:center;gap:8px}
+.out-section h4::after{content:"";flex:1;height:1px;background:var(--line)}
+.callout{background:linear-gradient(135deg,#F3E4FF,#F1F8FF);border:1px solid #DEC9F5;border-radius:11px;padding:16px 18px;font-size:13.5px;color:#3D0A70}
+.callout strong{color:var(--brand-800)}
+.pain-card{border:1px solid var(--line);border-radius:10px;padding:13px 15px;margin-bottom:10px;background:#FAFBFD}
+.pain-title{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700;color:var(--brand-900);margin-bottom:4px}
+.pain-no{width:22px;height:22px;border-radius:7px;background:var(--brand-800);color:#fff;font-size:11.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+.pain-card p{font-size:13px;color:var(--ink-2)}
+.pain-impl{font-size:12.5px;color:#7A3B00;background:#FFF3E5;border-radius:7px;padding:6px 9px;margin-top:8px}
+.pain-eco{font-size:12px;color:#6B1FB8;background:#F3E4FF;border-radius:7px;padding:6px 9px;margin-top:6px}
+.prop-row{display:grid;grid-template-columns:1fr 26px 1.45fr;gap:8px;align-items:center;padding:10px 0;border-bottom:1px dashed var(--line)}
+.prop-row:last-child{border-bottom:none}
+.prop-pain{font-size:13px;font-weight:600;color:var(--ink)}
+.prop-arrow{color:var(--brand-600);font-weight:700;text-align:center}
+.prop-lever strong{font-size:13px;color:var(--brand-700)}
+.prop-lever p{font-size:12.5px;color:var(--ink-2);margin-top:1px}
+.spin-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:1200px){.spin-grid{grid-template-columns:1fr}}
+.spin-card{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:#FAFBFD}
+.spin-card .st{font-size:12px;font-weight:700;letter-spacing:.05em;color:var(--brand-600);margin-bottom:6px}
+.spin-card ul{margin:0;padding-left:16px;font-size:13px;color:var(--ink-2)}
+.spin-card li{margin:5px 0}
+.path-step{display:flex;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.path-step:last-child{border-bottom:none}
+.step-no{width:26px;height:26px;border-radius:50%;background:var(--brand-800);color:#fff;font-size:12.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px}
+.path-step strong{font-size:13.5px;color:var(--brand-900)}
+.path-step p{font-size:13px;color:var(--ink-2);margin-top:1px}
+.research-chip{display:inline-flex;align-items:center;gap:8px;background:#F8F6FC;border:1px solid var(--line);border-radius:999px;padding:7px 13px;margin:0 8px 8px 0;font-size:12.5px;color:var(--ink-2)}
+.research-chip svg{width:13px;height:13px;stroke:var(--brand-600);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.vp-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.vp-tag{background:var(--brand-100);color:var(--brand-800);border-radius:7px;padding:3px 10px;font-size:12px;font-weight:600}
+
+/* 定价洞察卡片 */
+.pricing-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:1200px){.pricing-grid{grid-template-columns:1fr}}
+.price-card{border:1px solid #DEC9F5;border-radius:10px;padding:13px 15px;background:linear-gradient(160deg,#FAF6FE,#F4EBFC)}
+.price-card .st{font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--brand-700);margin-bottom:5px;display:flex;align-items:center;gap:6px}
+.price-card .st::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--brand-600)}
+.price-card p{font-size:12.8px;color:var(--ink-2)}
+.price-card p b{color:var(--brand-800)}
+
+/* 价值报价 */
+.quote-grid{display:grid;grid-template-columns:360px 1fr;gap:18px;align-items:start}
+@media(max-width:1080px){.quote-grid{grid-template-columns:1fr}}
+.quote-form label{display:block;font-size:12px;font-weight:700;color:var(--ink-2);margin:13px 0 5px}
+.quote-form .card-body{padding:18px 20px 22px}
+.factor-row{display:grid;grid-template-columns:1fr 54px;gap:10px;align-items:center;margin:10px 0}
+.factor-row label{margin:0;font-weight:500;color:var(--ink-2)}
+.factor-row input{padding:7px 8px;text-align:center}
+.quote-tier-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:1200px){.quote-tier-grid{grid-template-columns:1fr}}
+.tier-card{border:1px solid var(--line);border-radius:10px;padding:14px;background:#FAFBFD;position:relative}
+.tier-card.recommended{border:2px solid var(--brand-600);background:linear-gradient(160deg,#FAF6FE,#F3E4FF)}
+.tier-card.recommended::after{content:'建议优先报价';position:absolute;right:10px;top:10px;background:var(--brand-600);color:#fff;border-radius:999px;padding:3px 8px;font-size:10px;font-weight:700}
+.tier-card h5{font-size:14px;color:var(--brand-900);margin-bottom:3px}
+.tier-price{font-size:21px;font-weight:700;color:var(--brand-800);margin:7px 0}
+.tier-card p,.tier-card li{font-size:12px;color:var(--ink-2)}
+.tier-card ul{padding-left:16px;margin:7px 0 0}
+.quote-summary{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0 18px}
+.quote-metric{background:#F8F6FC;border:1px solid var(--line);border-radius:8px;padding:9px 12px;min-width:145px}
+.quote-metric span{display:block;font-size:11px;color:var(--ink-3)}
+.quote-metric strong{display:block;color:var(--brand-900);font-size:15px;margin-top:2px}
+.matrix-wrap{margin-top:16px;border:1px solid var(--line);border-radius:10px;padding:15px;background:#fff}
+.matrix-title{text-align:center;font-size:13px;font-weight:700;color:var(--brand-900);margin:2px 0 12px}
+.matrix{height:310px;position:relative;margin:8px 10px 24px 42px;border-left:1px solid #AEB7C5;border-bottom:1px solid #AEB7C5;background:linear-gradient(to right,rgba(123,48,216,.03) 1px,transparent 1px),linear-gradient(to top,rgba(123,48,216,.04) 1px,transparent 1px);background-size:20% 20%}
+.matrix::before{content:'价格 ↑';position:absolute;left:-39px;top:50%;transform:translateY(-50%) rotate(-90deg);transform-origin:center;font-size:11px;color:var(--ink-3);white-space:nowrap}
+.matrix::after{content:'提供的价值 →';position:absolute;right:0;bottom:-24px;font-size:11px;color:var(--ink-3)}
+.matrix-dot{position:absolute;transform:translate(-50%,50%);width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 5px rgba(42,6,80,.28)}
+.matrix-dot span{position:absolute;left:11px;top:-5px;white-space:nowrap;font-size:11px;font-weight:700;color:var(--ink-2)}
+.matrix-dot.ka{background:var(--brand-600);width:18px;height:18px}
+.matrix-dot.competitor{background:#98A2B3}
+.matrix-legend{display:flex;gap:16px;font-size:11.5px;color:var(--ink-2);margin-top:8px}
+.matrix-legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+.quote-history{margin-top:18px;border-top:1px dashed var(--line);padding-top:15px}
+.quote-history h5{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin-bottom:8px}
+.quote-record{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:#FAFBFD;margin:7px 0}
+.quote-record strong{font-size:12.5px;color:var(--brand-900)}
+.quote-record span{display:block;font-size:11px;color:var(--ink-3);margin-top:2px}
+.quote-record button{background:none;border:0;color:var(--brand-600);font-size:11.5px;font-weight:700;white-space:nowrap}
+.quote-record .quote-delete{color:var(--red);margin-left:8px}
+
+/* AI 快速建档 */
+.ai-panel{background:linear-gradient(150deg,#F7F1FD,#F3E4FF);border:1px solid #DEC9F5;border-radius:11px;padding:14px 15px;margin-bottom:18px}
+.ai-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px;flex-wrap:wrap}
+.ai-badge{font-size:13px;font-weight:700;color:var(--brand-800);font-family:'Funnel Display','Geologica',sans-serif}
+.ai-panel textarea{background:#fff}
+.ai-examples{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 10px}
+.ai-ex{font-size:11.5px;color:var(--brand-700);background:#fff;border:1px solid #DEC9F5;border-radius:999px;padding:3px 10px;cursor:pointer}
+.ai-ex:hover{background:var(--brand-100)}
+
+/* ---------- 弹窗 ---------- */
+.modal-overlay{position:fixed;inset:0;background:rgba(42,6,80,.45);display:none;align-items:flex-start;justify-content:center;padding:5vh 16px;z-index:60;overflow:auto}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:14px;width:100%;max-width:580px;box-shadow:0 24px 70px rgba(42,6,80,.30);animation:pop .22s ease}
+.modal-lg{max-width:660px}
+@keyframes pop{from{opacity:0;transform:scale(.97) translateY(6px)}to{opacity:1;transform:none}}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:17px 22px;border-bottom:1px solid var(--line)}
+.modal-head h3{font-size:16px;font-weight:700;color:var(--brand-900)}
+.icon-btn{background:none;border:none;color:var(--ink-3);font-size:16px;padding:5px 8px;border-radius:7px;line-height:1}
+.icon-btn:hover{background:#EEF1F6;color:var(--ink)}
+.modal-body{padding:20px 22px;max-height:66vh;overflow:auto}
+.modal-foot{display:flex;align-items:center;gap:10px;padding:14px 22px;border-top:1px solid var(--line);justify-content:flex-end}
+.advance-select{width:auto;margin-left:auto;min-width:150px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.form-grid .f2{grid-column:span 2}
+.form-grid label{display:block;font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:5px}
+.form-grid label .req{color:var(--red)}
+.detail-head{display:flex;align-items:center;gap:14px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.detail-head .avatar{width:46px;height:46px;border-radius:12px;font-size:17px}
+.detail-head h2{font-size:18px;font-weight:800;color:var(--brand-900)}
+.detail-head .sub{font-size:12.5px;color:var(--ink-3)}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;margin-top:16px}
+.detail-item{font-size:13px;display:flex;justify-content:space-between;gap:14px;padding:7px 0;border-bottom:1px dashed #EDF1F5}
+.detail-item .k{color:var(--ink-3);flex:none}
+.detail-item .v{font-weight:600;color:var(--ink);text-align:right;word-break:break-all}
+.detail-sec{margin-top:18px}
+.detail-sec h5{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin-bottom:8px}
+.pain-box{background:#FFF3E5;border:1px solid #F5E0C4;border-radius:9px;padding:11px 13px;font-size:13px;color:#7A3B00}
+.notes-box{background:#F8F6FC;border:1px solid var(--line);border-radius:9px;padding:11px 13px;font-size:13px;color:var(--ink-2);white-space:pre-wrap}
+
+/* ---------- Toast ---------- */
+#toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);background:var(--brand-900);color:#fff;padding:11px 20px;border-radius:10px;font-size:13.5px;font-weight:600;box-shadow:0 10px 30px rgba(42,6,80,.4);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:80}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ---------- 响应式 ---------- */
+@media(max-width:900px){
+  .sidebar{width:64px}
+  .main{margin-left:64px}
+  .brand-text,.sidebar-foot{display:none}
+  .brand{justify-content:center;padding:22px 0 18px}
+  .nav-item{justify-content:center;padding:11px 0;font-size:0}
+  .nav-item svg{width:19px;height:19px}
+  .topbar,.content{padding-left:18px;padding-right:18px}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .dash-grid{grid-template-columns:1fr}
+  .value-grid{grid-template-columns:1fr}
+  .spin-grid{grid-template-columns:1fr}
+  .pricing-grid{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  .fstage{grid-template-columns:118px 1fr;gap:8px}
+  .funnel-value{display:none}
+  .form-grid{grid-template-columns:1fr}
+  .form-grid .f2{grid-column:span 1}
+  .toolbar input{max-width:none;width:100%}
+  .detail-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ 侧边栏 ============ -->
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-mark">KA</div>
+    <div class="brand-text"><strong>Knight Auto</strong><span>Semiconductor · CRM Demo</span></div>
+  </div>
+  <nav>
+    <a class="nav-item active" data-page="dashboard" onclick="go('dashboard')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/></svg>
+      销售看板
+    </a>
+    <a class="nav-item" data-page="leads" onclick="go('leads')">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      线索管理
+    </a>
+    <a class="nav-item" data-page="value" onclick="go('value')">
+      <svg viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/><path d="M19 15l.9 2.4L22 18.3l-2.1.9L19 21.5l-.9-2.3-2.1-.9 2.1-.9L19 15z"/></svg>
+      价值定价
+    </a>
+    <a class="nav-item" data-page="quote" onclick="go('quote')">
+      <svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M6 16l4-5 3 3 5-7"/><path d="M17 7h3v3"/></svg>
+      价值报价
+    </a>
+  </nav>
+  <div class="sidebar-foot">Praxis Advisory · 演示版本</div>
+</aside>
+
+<!-- ============ 主区域 ============ -->
+<main class="main">
+  <header class="topbar">
+    <div>
+      <h1 id="page-title">销售看板</h1>
+      <p id="page-sub">Knight Auto · 半导体测试解决方案 · 销售漏斗与商机总览</p>
+    </div>
+    <div><span id="today-chip" class="chip"></span></div>
+  </header>
+
+  <div class="content">
+
+    <!-- ===== 看板 ===== -->
+    <section class="page active" id="page-dashboard">
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-label">总线索数</div><div class="kpi-value" id="kpi-total">–</div><div class="kpi-sub" id="kpi-total-sub">–</div></div>
+        <div class="kpi"><div class="kpi-label">有效商机</div><div class="kpi-value" id="kpi-opp">–</div><div class="kpi-sub" id="kpi-opp-sub">–</div></div>
+        <div class="kpi"><div class="kpi-label">加权管道金额</div><div class="kpi-value" id="kpi-pipe">–</div><div class="kpi-sub" id="kpi-pipe-sub">–</div></div>
+        <div class="kpi"><div class="kpi-label">已赢单金额</div><div class="kpi-value" id="kpi-won">–</div><div class="kpi-sub" id="kpi-won-sub">–</div></div>
+      </div>
+
+      <div class="card funnel-card">
+        <div class="card-head"><h3>销售漏斗 Sales Funnel</h3><span class="hint">线索由宽到窄逐级转化 · 各阶段数量与加权金额</span></div>
+        <div id="funnel-chart"></div>
+      </div>
+
+      <div class="dash-grid">
+        <div class="card">
+          <div class="card-head"><h3>线索来源分布</h3><span class="hint">按线索来源统计</span></div>
+          <div class="card-body" id="source-chart"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>最近跟进线索</h3><button class="link-btn" onclick="go('leads')">查看全部 →</button></div>
+          <div id="recent-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 线索管理 ===== -->
+    <section class="page" id="page-leads">
+      <div class="toolbar">
+        <input id="lead-search" placeholder="搜索公司 / 联系人 / 痛点…" oninput="filters.q=this.value;renderLeads()">
+        <select id="filter-stage" onchange="filters.stage=this.value;renderLeads()"></select>
+        <select id="filter-source" onchange="filters.source=this.value;renderLeads()"></select>
+        <div class="spacer"></div>
+        <button class="btn-ghost" onclick="resetData()">重置示例数据</button>
+        <button class="btn-primary" onclick="openLeadModal()">＋ 新建线索</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th onclick="sortBy('company')">公司 <span class="arr" id="arr-company"></span></th>
+                <th>类型</th>
+                <th>联系人</th>
+                <th>来源</th>
+                <th onclick="sortBy('stage')">阶段 <span class="arr" id="arr-stage"></span></th>
+                <th onclick="sortBy('value')" style="text-align:right">预计金额 <span class="arr" id="arr-value"></span></th>
+                <th style="text-align:right">加权</th>
+                <th onclick="sortBy('lastContact')">最近跟进 <span class="arr" id="arr-lastContact"></span></th>
+                <th style="text-align:right">操作</th>
+              </tr>
+            </thead>
+            <tbody id="leads-tbody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="leads-empty" style="display:none">没有符合条件的线索，试试调整筛选条件或新建一条。</div>
+      </div>
+    </section>
+
+    <!-- ===== 价值定价 ===== -->
+    <section class="page" id="page-value">
+      <div class="value-grid">
+        <div class="card vf">
+          <div class="card-head"><h3>目标客户分析</h3></div>
+          <div class="card-body">
+            <label>目标客户名称 *</label>
+            <input id="vp-company" placeholder="例如：NXP / 华为海思 / 长电科技 / 北方华创">
+            <label>客户类型</label>
+            <input id="vp-industry" placeholder="例如：芯片设计（IDM）/ 封测代工（OSAT）/ 设备制造">
+            <label>核心产品 / 工艺</label>
+            <textarea id="vp-product" rows="2" placeholder="这家客户主要做什么芯片或设备？什么工艺节点、封装类型？"></textarea>
+            <label>关键信号 / 关键词（逗号分隔）</label>
+            <input id="vp-chars" placeholder="例如：车规、HPC、先进封装、扩产、多产品线、高压功率">
+            <label>已知背景（可选）</label>
+            <textarea id="vp-bg" rows="2" placeholder="扩产计划、量产时间表、现有测试供应商、良率/测试成本信息…"></textarea>
+            <details class="adv">
+              <summary>高级设置 · 我方方案简介（影响价值主张匹配）</summary>
+              <textarea id="vp-solution" rows="3">Knight Auto（KA Group）半导体测试解决方案：晶圆测试（探针卡）、最终测试（测试座 / ATC / 换型套件）、精密治具与 ESD 防护材料，帮助芯片设计与封测客户提升良率、缩短测试时间、降低单颗测试成本。</textarea>
+              <p class="hint">生成器会基于我方方案关键词，为每个客户痛点匹配价值主张与定价洞察。</p>
+            </details>
+            <div style="margin-top:18px;display:flex;flex-direction:column;gap:10px">
+              <button class="btn-primary btn-block" onclick="generateSalesPlan()">⚡ 生成价值销售方案</button>
+              <button class="btn-ghost btn-block" id="vp-save-lead" style="display:none" onclick="saveLeadFromPlan()">＋ 另存为线索</button>
+            </div>
+          </div>
+        </div>
+        <div class="card" id="vp-output">
+          <div class="empty big">输入目标客户信息后，点击「生成价值销售方案」<br><span class="muted">这里将输出：经济痛点假设、价值主张映射、SPIN 提问清单、<br>定价策略洞察（Value-Based Pricing）与调研清单</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 价值报价 ===== -->
+    <section class="page" id="page-quote">
+      <div class="quote-grid">
+        <div class="card quote-form">
+          <div class="card-head"><h3>报价输入</h3><span class="hint">把价值转成可解释的报价</span></div>
+          <div class="card-body">
+            <label>客户 / 项目</label>
+            <input id="q-company" value="中芯国际 SMIC" oninput="renderQuote()">
+            <label>客户类型</label>
+            <select id="q-type"><option>芯片设计 / IDM</option><option selected>晶圆代工 Foundry</option><option>OSAT 封测代工</option><option>半导体设备制造</option></select>
+            <label>竞争对手报价（€）</label>
+            <input id="q-competitor" type="number" value="300000" min="0" step="10000" oninput="renderQuote()">
+            <label>竞争对手名称</label>
+            <input id="q-competitor-name" value="Competitor A" placeholder="例如：供应商 A / 现有供应商" oninput="renderQuote()">
+            <label>Knight Auto 基础成本 / 报价底线（€）</label>
+            <input id="q-base" type="number" value="240000" min="0" step="10000" oninput="renderQuote()">
+            <div class="hint" style="margin-top:5px">用于演示价格边界，不等于对外报价。</div>
+            <label style="margin-top:18px">价值因子评分（0–5）</label>
+            <div class="factor-row"><label>产品 / 技术溢价优势</label><input id="q-tech" type="number" min="0" max="5" value="4" oninput="renderQuote()"></div>
+            <div class="factor-row"><label>本地化与客户距离</label><input id="q-local" type="number" min="0" max="5" value="3" oninput="renderQuote()"></div>
+            <div class="factor-row"><label>交付速度 / 量产窗口</label><input id="q-speed" type="number" min="0" max="5" value="4" oninput="renderQuote()"></div>
+            <div class="factor-row"><label>现场服务与响应</label><input id="q-service" type="number" min="0" max="5" value="4" oninput="renderQuote()"></div>
+            <div class="factor-row"><label>咨询 / 工程协同深度</label><input id="q-advisory" type="number" min="0" max="5" value="3" oninput="renderQuote()"></div>
+            <details class="adv" style="margin-top:15px">
+              <summary>竞争对手价值因子评分（0–5）</summary>
+              <div class="factor-row"><label>产品 / 技术溢价优势</label><input id="qc-tech" type="number" min="0" max="5" value="3" oninput="renderQuote()"></div>
+              <div class="factor-row"><label>本地化与客户距离</label><input id="qc-local" type="number" min="0" max="5" value="2" oninput="renderQuote()"></div>
+              <div class="factor-row"><label>交付速度 / 量产窗口</label><input id="qc-speed" type="number" min="0" max="5" value="3" oninput="renderQuote()"></div>
+              <div class="factor-row"><label>现场服务与响应</label><input id="qc-service" type="number" min="0" max="5" value="2" oninput="renderQuote()"></div>
+              <div class="factor-row"><label>咨询 / 工程协同深度</label><input id="qc-advisory" type="number" min="0" max="5" value="2" oninput="renderQuote()"></div>
+            </details>
+            <button class="btn-primary btn-block" style="margin-top:14px" onclick="saveQuoteRecord()">保存本次报价记录</button>
+          </div>
+        </div>
+        <div class="card" id="quote-output"></div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<!-- ============ 线索编辑弹窗 ============ -->
+<div class="modal-overlay" id="leadModal" onclick="if(event.target===this)closeModal('leadModal')">
+  <div class="modal">
+    <div class="modal-head"><h3 id="leadModalTitle">新建线索</h3><button class="icon-btn" onclick="closeModal('leadModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="ai-panel" id="ai-panel">
+        <div class="ai-head"><span class="ai-badge">✨ AI 快速建档</span><span class="hint">输入一段话，AI 自动识别并填入下方字段</span></div>
+        <textarea id="ai-input" rows="3" placeholder="例如：英飞凌 Infineon，德国德累斯顿，SiC 功率器件扩产，车规认证，测试座寿命与接触阻抗问题，预计 42 万欧，联系人 Anna Hoffmann，采购副总裁"></textarea>
+        <div class="ai-examples">
+          <span class="ai-ex" onclick="aiExample(0)">英飞凌 · SiC 扩产</span>
+          <span class="ai-ex" onclick="aiExample(1)">中芯国际 · 良率爬坡</span>
+          <span class="ai-ex" onclick="aiExample(2)">通富微电 · 换型</span>
+        </div>
+        <button class="btn-primary btn-block" id="ai-run" onclick="aiGenerate()">🤖 AI 生成线索</button>
+      </div>
+      <div class="form-grid">
+        <div class="f2"><label>公司名称 <span class="req">*</span></label><input id="f-company"></div>
+        <div class="f2"><label>联系人 <span class="req">*</span></label><input id="f-contact"></div>
+        <div><label>客户类型</label><input id="f-industry" placeholder="芯片设计 / OSAT 封测 / 设备制造"></div>
+        <div><label>地区</label><input id="f-region"></div>
+        <div><label>职位</label><input id="f-title"></div>
+        <div><label>电话</label><input id="f-phone"></div>
+        <div class="f2"><label>邮箱</label><input id="f-email"></div>
+        <div><label>来源</label><select id="f-source"></select></div>
+        <div><label>阶段</label><select id="f-stage"></select></div>
+        <div><label>预计金额（€）</label><input id="f-value" type="number" min="0" step="1000"></div>
+        <div><label>最近跟进</label><input id="f-lastContact" type="date"></div>
+        <div><label>负责人</label><input id="f-owner"></div>
+        <div class="f2"><label>痛点 / 经济诉求</label><textarea id="f-pain" rows="2" placeholder="例如：晶圆良率损失、测试成本占比高、探针卡寿命短、车规零缺陷…"></textarea></div>
+        <div class="f2"><label>备注</label><textarea id="f-notes" rows="2"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeModal('leadModal')">取消</button>
+      <button class="btn-primary" onclick="saveLead()">保存线索</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 线索详情弹窗 ============ -->
+<div class="modal-overlay" id="detailModal" onclick="if(event.target===this)closeModal('detailModal')">
+  <div class="modal modal-lg">
+    <div class="modal-head"><h3>线索详情</h3><button class="icon-btn" onclick="closeModal('detailModal')">✕</button></div>
+    <div class="modal-body" id="detailBody"></div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="editFromDetail()">编辑</button>
+      <button class="btn-primary" onclick="valueFromDetail()">⚡ 生成价值方案</button>
+      <select class="advance-select" id="advance-stage" onchange="advanceStage(this.value)"></select>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ================= 常量与数据 ================= */
+const STAGES = [
+  {key:'new',         label:'新线索',   prob:10, color:'#C7B3F7', darkText:true},
+  {key:'contacted',   label:'初步接触', prob:20, color:'#A98FF0', darkText:true},
+  {key:'qualified',   label:'需求确认', prob:40, color:'#8B5CF6', darkText:false},
+  {key:'demo',        label:'方案演示', prob:60, color:'#7C3AED', darkText:false},
+  {key:'negotiation', label:'商务谈判', prob:80, color:'#6D28D9', darkText:false},
+  {key:'won',         label:'赢单',     prob:100,color:'#0E9F6E', darkText:false},
+  {key:'lost',        label:'流失',     prob:0,  color:'#E5484D', darkText:false},
+];
+const ACTIVE_STAGES = STAGES.filter(s => !['won','lost'].includes(s.key));
+const SOURCES = ['官网表单','SEMICON 展会','LinkedIn','转介绍','行业报告','内容营销','电话外呼','合作伙伴','价值销售分析'];
+
+const SEED_LEADS = [
+  {id:'L-1001', company:'NXP Semiconductors',      industry:'芯片设计 / IDM（车规）',  region:'荷兰 · 埃因霍温', contact:'Marco van der Berg', title:'VP 测试工程',       email:'m.vdberg@nxp.com',              phone:'+31 40 000 001', source:'LinkedIn',    stage:'negotiation', value:480000, painPoints:'车规零缺陷要求高；晶圆测试漏检风险；测试成本占单颗成本比例上升', lastContact:'2026-07-30', owner:'张晟', notes:'车规芯片线扩产，Q4 定标；重点关注 KGD 识别与缺陷逃逸控制，对良率对赌定价有兴趣。', createdAt:'2026-06-15'},
+  {id:'L-1002', company:'Qualcomm',                industry:'芯片设计（移动 / AI）',   region:'美国 · 圣地亚哥', contact:'Lisa Chen',           title:'Director, Test Ops', email:'l.chen@qti.qualcomm.com',     phone:'+1 858 000 002',  source:'转介绍',     stage:'demo',        value:620000, painPoints:'HPC 芯片测试时间长；并测数量受限；单颗测试成本高企',            lastContact:'2026-07-28', owner:'张晟', notes:'AI 芯片测试方案选型中，8 月中方案演示，重点准备并测与测试时间 ROI 测算。', createdAt:'2026-06-22'},
+  {id:'L-1003', company:'华为海思 HiSilicon',      industry:'芯片设计',                region:'中国 · 深圳',       contact:'王磊',               title:'测试总监',         email:'wang.lei@hisilicon.com',        phone:'+86 755 000 003', source:'行业报告',   stage:'new',         value:550000, painPoints:'先进制程良率与测试复杂度上升；多产品线快速换型需求',               lastContact:'2026-07-22', owner:'李婷', notes:'从行业报告识别其先进制程扩产，尚未首次触达，需谨慎制定切入策略。', createdAt:'2026-07-18'},
+  {id:'L-1004', company:'中芯国际 SMIC',           industry:'晶圆代工 Foundry',        region:'中国 · 上海',       contact:'张伟',               title:'良率与测试工程总监', email:'zhang.wei@smic.com',          phone:'+86 21 000 004',  source:'行业报告',   stage:'qualified',   value:360000, painPoints:'先进制程良率爬坡压力；探针卡交期与寿命；测试成本控制',            lastContact:'2026-07-26', owner:'李婷', notes:'产能满载、代工价格上调，客户对测试环节降本诉求强烈，已进入需求确认。', createdAt:'2026-07-03'},
+  {id:'L-1005', company:'长电科技 JCET',           industry:'OSAT 封测代工',           region:'中国 · 江阴',       contact:'陈建明',             title:'工艺总监',         email:'chen.jm@jcetglobal.com',        phone:'+86 510 000 005', source:'SEMICON 展会',stage:'qualified',   value:380000, painPoints:'探针卡/测试座寿命与停机损失；封测产能爬坡交付紧张',               lastContact:'2026-07-25', owner:'李婷', notes:'SEMICON China 现场接触，对测试座 TCO 与快速换型方案兴趣高。',      createdAt:'2026-07-02'},
+  {id:'L-1006', company:'通富微电 TFME',           industry:'OSAT 封测代工',           region:'中国 · 南通',       contact:'周强',               title:'测试厂长',         email:'zhou.qiang@tfme.com',          phone:'+86 513 000 006', source:'官网表单',   stage:'contacted',   value:260000, painPoints:'多品种小批量换型频繁；机台利用率不足；换型停机时间长',             lastContact:'2026-07-18', owner:'张晟', notes:'官网提交测试治具咨询，已电话沟通一次，希望先看换型套件案例。',       createdAt:'2026-07-14'},
+  {id:'L-1007', company:'华虹半导体 Hua Hong',     industry:'晶圆代工 Foundry（功率 / 特色工艺）', region:'中国 · 上海', contact:'吴敏', title:'设备工程总监', email:'wu.min@huahong.com', phone:'+86 21 000 007', source:'合作伙伴',   stage:'new',         value:410000, painPoints:'功率器件测试；8 英寸产线扩产；SiC / GaN 新线测试方案',           lastContact:'2026-07-08', owner:'张晟', notes:'由渠道合作伙伴引荐；其无锡 8 英寸功率产线满载扩产中（客户含 Infineon），待安排首次会议。', createdAt:'2026-07-12'},
+  {id:'L-1008', company:'北方华创 Naura',          industry:'半导体设备制造',          region:'中国 · 北京',       contact:'赵敏',               title:'供应链总监',       email:'zhao.min@naura.com',           phone:'+86 10 000 008', source:'电话外呼',   stage:'won',         value:340000, painPoints:'自研设备量产测试精度；ESD 防护材料一致性',                        lastContact:'2026-07-10', owner:'李婷', notes:'已签约精密治具 + ESD 材料年度协议，8 月交付首批。',                 createdAt:'2026-05-26'},
+  {id:'L-1009', company:'Infineon Technologies',   industry:'IDM（功率半导体）',      region:'德国 · 德累斯顿',   contact:'Anna Hoffmann',      title:'Senior Manager Test', email:'anna.hoffmann@infineon.com',   phone:'+49 351 000 009', source:'LinkedIn',    stage:'demo',        value:420000, painPoints:'SiC 高压高流测试；车规认证周期长；测试座寿命与接触阻抗',           lastContact:'2026-07-05', owner:'张晟', notes:'SiC 产线扩产中，8 月安排方案演示；华虹无锡线也为其代工，可借势联动。', createdAt:'2026-07-11'},
+];
+
+const LS_KEY = 'knightAutoCrmLeadsV2'; // 版本号用于在种子数据更新时自动刷新（避免旧缓存覆盖新客户）
+let leads = load();
+let filters = {q:'', stage:'all', source:'all'};
+let sortKey = 'lastContact', sortDir = -1;
+let lastPlan = null;
+let editingId = null, detailId = null;
+
+/* ================= 工具函数 ================= */
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtW(v){ return '€ ' + Math.round(Number(v)||0).toLocaleString('en-US'); }
+function stageOf(key){ return STAGES.find(s => s.key === key) || STAGES[0]; }
+function today(){ const d = new Date(); const p = n => String(n).padStart(2,'0'); return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+function newId(){ const n = leads.reduce((m,l)=>{ const v = parseInt(String(l.id).replace(/\D/g,''),10); return isNaN(v)?m:Math.max(m,v); },1000); return 'L-'+(n+1); }
+
+function load(){ try{ const raw = localStorage.getItem(LS_KEY); if(raw){ const d = JSON.parse(raw); if(Array.isArray(d)) return d; } }catch(e){} return JSON.parse(JSON.stringify(SEED_LEADS)); }
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(leads)); }catch(e){} }
+function resetData(){ if(confirm('确定恢复示例数据吗？当前录入的线索将被覆盖。')){ leads = JSON.parse(JSON.stringify(SEED_LEADS)); save(); renderAll(); toast('已恢复示例数据'); } }
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'), 2400);
+}
+
+function go(page){
+  document.querySelectorAll('.nav-item').forEach(a => a.classList.toggle('active', a.dataset.page === page));
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'page-'+page));
+  const meta = {dashboard:{t:'销售看板', s:'Knight Auto · 半导体测试解决方案 · 销售漏斗与商机总览'}, leads:{t:'线索管理', s:'芯片厂与封测/设备客户的线索明细与跟进状态'}, value:{t:'价值定价', s:'输入目标芯片客户，生成以价值定价为核心的销售方案'}, quote:{t:'价值报价', s:'把技术、服务与交付价值转成报价策略，并与竞争对手比较'}}[page];
+  document.getElementById('page-title').textContent = meta.t;
+  document.getElementById('page-sub').textContent = meta.s;
+  if(page === 'leads') renderLeads();
+  if(page === 'quote') renderQuote();
+}
+
+/* ================= 看板 ================= */
+function renderKpis(){
+  const active = leads.filter(l => ['qualified','demo','negotiation'].includes(l.stage));
+  const won = leads.filter(l => l.stage === 'won');
+  const lost = leads.filter(l => l.stage === 'lost');
+  const pipeline = leads.reduce((s,l) => {
+    const st = stageOf(l.stage);
+    return st.prob > 0 ? s + (Number(l.value)||0) * st.prob / 100 : s;
+  }, 0);
+  const wonAmt = won.reduce((s,l)=>s+(Number(l.value)||0),0);
+  const avg = won.length ? Math.round(wonAmt / won.length) : 0;
+  document.getElementById('kpi-total').textContent = leads.length;
+  document.getElementById('kpi-total-sub').innerHTML = '有效线索 <b>' + (leads.length - lost.length) + '</b> · 流失 ' + lost.length;
+  document.getElementById('kpi-opp').textContent = active.length;
+  document.getElementById('kpi-opp-sub').innerHTML = '需求确认至商务谈判阶段';
+  document.getElementById('kpi-pipe').textContent = fmtW(pipeline);
+  document.getElementById('kpi-pipe-sub').innerHTML = '按阶段概率加权的预计收入';
+  document.getElementById('kpi-won').textContent = fmtW(wonAmt);
+  const decided = won.length + lost.length;
+  document.getElementById('kpi-won-sub').innerHTML = '平均客单价 <b>' + fmtW(avg) + '</b> · 赢单 ' + won.length + ' 单';
+}
+
+function renderFunnel(){
+  const act = ACTIVE_STAGES.map(s => ({...s, list: leads.filter(l => l.stage === s.key)}));
+  const max = Math.max(1, ...act.map(a => a.list.length));
+  const activeTotal = Math.max(1, act.reduce((n,a) => n + a.list.length, 0));
+  const rows = act.map((a,i) => {
+    const pct = Math.max(14, Math.round(a.list.length / max * 100));
+    const amount = a.list.reduce((s,l) => s + (Number(l.value)||0) * a.prob / 100, 0);
+    // 阶段是当前状态的互斥快照，不能用“本阶段人数 / 上阶段人数”做转化率，
+    // 否则线索回填或阶段分布变化时会出现 200% 等误导性结果。
+    const conv = Math.round(a.list.length / activeTotal * 100) + '%进入漏斗';
+    const txt = a.darkText ? '#3D0A70' : '#FFFFFF';
+    return `<div class="fstage">
+      <div class="funnel-label"><span class="dot" style="background:${a.color}"></span>${a.label}<span class="prob">${a.prob}%</span></div>
+      <div class="fseg-wrap"><div class="fseg" style="width:${pct}%;background:linear-gradient(180deg,${a.color},${a.color});color:${txt}">${a.list.length}</div></div>
+      <div class="funnel-value"><strong>${fmtW(amount)}</strong><span class="conv">${conv}</span></div>
+    </div>`;
+  }).join('');
+  const won = leads.filter(l=>l.stage==='won').length;
+  const lost = leads.filter(l=>l.stage==='lost').length;
+  const pipe = leads.reduce((s,l)=>{ const st = stageOf(l.stage); return st.prob>0 ? s+(Number(l.value)||0)*st.prob/100 : s; },0);
+  document.getElementById('funnel-chart').innerHTML = `<div class="funnel-chart">${rows}</div>
+    <div class="funnel-summary"><span>漏斗线索合计：<b>${leads.length - won - lost}</b></span><span>加权管道总额：<b>${fmtW(pipe)}</b></span><span>赢单：<b>${won}</b></span><span>流失：<b>${lost}</b></span></div>`;
+}
+
+function renderSource(){
+  const counts = SOURCES.map(s => ({s, n: leads.filter(l => l.source === s).length})).filter(x => x.n > 0).sort((a,b) => b.n - a.n);
+  const max = Math.max(1, ...counts.map(c => c.n));
+  const rows = counts.map((c,i) => {
+    const w = Math.max(4, Math.round(c.n / max * 100));
+    const alpha = 0.9 - i * 0.11;
+    return `<div class="source-row">
+      <div class="source-name">${esc(c.s)}</div>
+      <div class="source-track"><div class="source-bar" style="width:${w}%;background:rgba(123,48,216,${Math.max(alpha,0.32)})"></div></div>
+      <div class="source-count">${c.n}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('source-chart').innerHTML = rows || '<div class="empty">暂无数据</div>';
+}
+
+function renderRecent(){
+  const list = [...leads].sort((a,b) => String(b.lastContact).localeCompare(String(a.lastContact))).slice(0,5);
+  const rows = list.map(l => {
+    const st = stageOf(l.stage);
+    return `<div class="recent-row" onclick="openDetail('${l.id}')" style="cursor:pointer">
+      <div class="avatar">${esc(String(l.company).charAt(0).toUpperCase())}</div>
+      <div class="recent-main"><strong>${esc(l.company)}</strong><span class="sub">${esc(l.contact||'—')} · 最近跟进 ${esc(l.lastContact||'—')}</span></div>
+      <span class="badge" style="background:${st.color}22;color:${st.darkText?'#3D0A70':st.color}">${st.label}</span>
+      <div class="recent-val" style="width:110px;text-align:right">${fmtW((Number(l.value)||0)*st.prob/100)}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('recent-list').innerHTML = rows || '<div class="empty">暂无线索</div>';
+}
+
+function renderDashboard(){ renderKpis(); renderFunnel(); renderSource(); renderRecent(); }
+
+/* ================= 线索管理 ================= */
+function matchFilter(l){
+  const q = filters.q.trim().toLowerCase();
+  const okQ = !q || [l.company,l.contact,l.painPoints,l.industry,l.notes].join(' ').toLowerCase().includes(q);
+  const okS = filters.stage === 'all' || l.stage === filters.stage;
+  const okSrc = filters.source === 'all' || l.source === filters.source;
+  return okQ && okS && okSrc;
+}
+
+function sortBy(key){
+  if(sortKey === key){ sortDir = -sortDir; } else { sortKey = key; sortDir = (key === 'company' || key === 'lastContact') ? 1 : -1; }
+  document.querySelectorAll('th .arr').forEach(a => a.textContent = '');
+  const arr = document.getElementById('arr-'+key);
+  if(arr) arr.textContent = sortDir > 0 ? '▲' : '▼';
+  renderLeads();
+}
+
+function stageProb(l){ return stageOf(l.stage).prob; }
+
+function renderLeads(){
+  let list = leads.filter(matchFilter);
+  list.sort((a,b) => {
+    let va, vb;
+    if(sortKey === 'value'){ va = Number(a.value)||0; vb = Number(b.value)||0; }
+    else if(sortKey === 'stage'){ va = stageProb(a); vb = stageProb(b); }
+    else { va = String(a[sortKey]||'').toLowerCase(); vb = String(b[sortKey]||'').toLowerCase(); }
+    if(va < vb) return -sortDir;
+    if(va > vb) return sortDir;
+    return 0;
+  });
+  const rows = list.map(l => {
+    const st = stageOf(l.stage);
+    const w = Math.round((Number(l.value)||0) * st.prob / 100);
+    return `<tr onclick="openDetail('${l.id}')">
+      <td><div class="cell-company"><div class="avatar">${esc(String(l.company).charAt(0).toUpperCase())}</div><div><strong>${esc(l.company)}</strong><span class="sub">${esc(l.region||'')}</span></div></div></td>
+      <td class="muted">${esc(l.industry||'—')}</td>
+      <td><div><strong style="font-weight:600;font-size:13px">${esc(l.contact||'—')}</strong><span class="sub" style="display:block;font-size:11.5px;color:var(--ink-3)">${esc(l.title||'')}</span></div></td>
+      <td><span class="badge" style="background:#EEF1F6;color:#5A667A">${esc(l.source||'—')}</span></td>
+      <td><span class="badge" style="background:${st.color}22;color:${st.darkText?'#3D0A70':st.color}">${st.label} · ${st.prob}%</span></td>
+      <td class="num" style="text-align:right;font-weight:600">${fmtW(l.value)}</td>
+      <td class="num muted" style="text-align:right">${fmtW(w)}</td>
+      <td class="num muted">${esc(l.lastContact||'—')}</td>
+      <td style="text-align:right"><div class="row-actions" onclick="event.stopPropagation()">
+        <button onclick="openDetail('${l.id}')">查看</button>
+        <button onclick="openLeadModal('${l.id}')">编辑</button>
+        <button class="del" onclick="deleteLead('${l.id}')">删除</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('leads-tbody').innerHTML = rows;
+  document.getElementById('leads-empty').style.display = rows ? 'none' : 'block';
+}
+
+function deleteLead(id){
+  if(!confirm('确定删除这条线索吗？')) return;
+  leads = leads.filter(l => l.id !== id);
+  save(); renderAll();
+  if(detailId === id) closeModal('detailModal');
+  toast('线索已删除');
+}
+
+/* ================= 线索弹窗 ================= */
+function openLeadModal(id){
+  editingId = id || null;
+  const l = id ? leads.find(x => x.id === id) : null;
+  document.getElementById('leadModalTitle').textContent = l ? '编辑线索' : '新建线索';
+  document.getElementById('f-company').value = l ? l.company : '';
+  document.getElementById('f-contact').value = l ? l.contact : '';
+  document.getElementById('f-industry').value = l ? (l.industry||'') : '';
+  document.getElementById('f-region').value = l ? (l.region||'') : '';
+  document.getElementById('f-title').value = l ? (l.title||'') : '';
+  document.getElementById('f-phone').value = l ? (l.phone||'') : '';
+  document.getElementById('f-email').value = l ? (l.email||'') : '';
+  document.getElementById('f-source').value = l ? l.source : SOURCES[0];
+  document.getElementById('f-stage').value = l ? l.stage : 'new';
+  document.getElementById('f-value').value = l ? (l.value||'') : '';
+  document.getElementById('f-lastContact').value = l ? (l.lastContact||today()) : today();
+  document.getElementById('f-owner').value = l ? (l.owner||'') : '张晟';
+  document.getElementById('f-pain').value = l ? (l.painPoints||'') : '';
+  document.getElementById('f-notes').value = l ? (l.notes||'') : '';
+  const aiPanel = document.getElementById('ai-panel');
+  if(aiPanel){ aiPanel.style.display = l ? 'none' : 'block'; }
+  const aiInput = document.getElementById('ai-input');
+  if(aiInput) aiInput.value = '';
+  document.getElementById('leadModal').classList.add('open');
+}
+
+function closeModal(name){
+  document.getElementById(name).classList.remove('open');
+  if(name === 'detailModal') detailId = null;
+}
+
+function saveLead(){
+  const company = document.getElementById('f-company').value.trim();
+  const contact = document.getElementById('f-contact').value.trim();
+  if(!company || !contact){ toast('请填写公司名称和联系人'); return; }
+  const data = {
+    company, contact,
+    industry: document.getElementById('f-industry').value.trim(),
+    region: document.getElementById('f-region').value.trim(),
+    title: document.getElementById('f-title').value.trim(),
+    phone: document.getElementById('f-phone').value.trim(),
+    email: document.getElementById('f-email').value.trim(),
+    source: document.getElementById('f-source').value,
+    stage: document.getElementById('f-stage').value,
+    value: parseFloat(document.getElementById('f-value').value) || 0,
+    lastContact: document.getElementById('f-lastContact').value || today(),
+    owner: document.getElementById('f-owner').value.trim() || '—',
+    painPoints: document.getElementById('f-pain').value.trim(),
+    notes: document.getElementById('f-notes').value.trim(),
+  };
+  if(editingId){
+    const l = leads.find(x => x.id === editingId);
+    Object.assign(l, data);
+    toast('线索已更新');
+  } else {
+    leads.unshift({id: newId(), ...data, createdAt: today()});
+    toast('新线索已创建');
+  }
+  save(); renderAll();
+  closeModal('leadModal');
+}
+
+/* ================= 详情弹窗 ================= */
+function openDetail(id){
+  const l = leads.find(x => x.id === id);
+  if(!l) return;
+  detailId = id;
+  const st = stageOf(l.stage);
+  const w = Math.round((Number(l.value)||0) * st.prob / 100);
+  const items = [
+    ['联系人', l.contact], ['职位', l.title], ['邮箱', l.email], ['电话', l.phone],
+    ['客户类型', l.industry], ['地区', l.region], ['来源', l.source], ['负责人', l.owner],
+    ['预计金额', fmtW(l.value)], ['加权金额', fmtW(w)], ['创建时间', l.createdAt], ['最近跟进', l.lastContact],
+  ];
+  document.getElementById('detailBody').innerHTML = `
+    <div class="detail-head">
+      <div class="avatar">${esc(String(l.company).charAt(0).toUpperCase())}</div>
+      <div><h2>${esc(l.company)}</h2><span class="sub">${esc(l.industry||'')} · ${esc(l.region||'')}</span></div>
+      <span class="badge" style="margin-left:auto;background:${st.color}22;color:${st.darkText?'#3D0A70':st.color};font-size:13px">${st.label} · ${st.prob}%</span>
+    </div>
+    <div class="detail-grid">${items.map(i => `<div class="detail-item"><span class="k">${i[0]}</span><span class="v">${esc(i[1]||'—')}</span></div>`).join('')}</div>
+    <div class="detail-sec"><h5>痛点 / 经济诉求</h5><div class="pain-box">${esc(l.painPoints||'未记录，可在「生成价值方案」中补充分析。')}</div></div>
+    <div class="detail-sec"><h5>备注</h5><div class="notes-box">${esc(l.notes||'—')}</div></div>`;
+  const sel = document.getElementById('advance-stage');
+  sel.innerHTML = STAGES.map(s => `<option value="${s.key}" ${s.key===l.stage?'selected':''}>${s.label}（${s.prob}%）</option>`).join('');
+  document.getElementById('detailModal').classList.add('open');
+}
+
+function advanceStage(v){
+  const l = leads.find(x => x.id === detailId);
+  if(!l) return;
+  l.stage = v;
+  save(); renderAll();
+  toast('阶段已更新为「' + stageOf(v).label + '」');
+  openDetail(detailId);
+}
+
+function editFromDetail(){
+  closeModal('detailModal');
+  openLeadModal(detailId);
+}
+
+function valueFromDetail(){
+  const l = leads.find(x => x.id === detailId);
+  if(!l) return;
+  closeModal('detailModal');
+  document.getElementById('vp-company').value = l.company;
+  document.getElementById('vp-industry').value = l.industry || '';
+  document.getElementById('vp-product').value = '';
+  document.getElementById('vp-chars').value = '';
+  document.getElementById('vp-bg').value = (l.painPoints ? '已知诉求：' + l.painPoints + '\n' : '') + (l.notes||'');
+  go('value');
+  generateSalesPlan();
+}
+
+/* ================= 价值定价生成器 ================= */
+const PAIN_LIBRARY = [
+  {id:'yield',      domain:'晶圆测试与良率',   leverId:'wafersol',
+   kw:['良率','晶圆','wafer','yield','逃逸','缺陷','漏检','KGD','封装成本'],
+   title:'晶圆良率损失与缺陷逃逸推高单颗成本',
+   desc:'测试环节的漏检与误判直接影响 KGD（已知好芯）识别：缺陷逃逸进入封装带来巨额后端成本，过杀又白扔合格芯片——两者都直接侵蚀单颗毛利。',
+   implication:'良率每损失 1 个百分点，乘以晶圆价格与年测试片数，就是数百万欧元的毛利流失；一次缺陷逃逸引发的客户退货或车规索赔，金额远超测试方案本身的价格。',
+   eco:'经济价值 ≈ 晶圆价格 × 年测试片数 × 良率提升幅度；良率 +1% 即为可量化的年毛利改善。'},
+  {id:'testcost',   domain:'单颗测试成本',     leverId:'finalsol',
+   kw:['测试成本','测试时间','吞吐','产能','并测','parallel','测试效率'],
+   title:'单颗测试成本高企，压缩报价与毛利空间',
+   desc:'高端芯片（HPC / 车规 / 5G）测试时间长、并测数量受限，测试成本占单颗总成本比例不断上升，直接吃掉客户在晶圆与封测端的毛利。',
+   implication:'测试时间每缩短 10%，对应测试产能与折旧分摊同步改善；对客户而言，这意味着单颗成本下降、报价空间重新打开。',
+   eco:'经济价值 ≈ 单颗测试成本 × 年测试量 × 降本幅度；测试时间 -10% 通常对应单颗测试成本 -8~12%。'},
+  {id:'tco',        domain:'测试治具 TCO',     leverId:'tooling',
+   kw:['探针卡','测试座','socket','probe','寿命','接触','磨损','更换','治具'],
+   title:'测试治具的真实成本是 TCO，而非单价',
+   desc:'探针卡与测试座的真实成本是 TCO：单价只是分母，寿命（接触次数）、清洗维护频率、失效停机与重测成本才是大头。',
+   implication:'同样单价下，寿命提升 40% 意味着单颗分摊测试成本下降约 30%；反之，计划外失效会以停机与重测成本的形式数倍返还。',
+   eco:'经济价值 ≈ 治具单价 ÷ 总接触次数 × 年测试量；寿命 +40% 通常对应单颗分摊测试成本 -25~30%。'},
+  {id:'recall',     domain:'车规零缺陷与索赔', leverId:'wafersol',
+   kw:['车规','零缺陷','召回','索赔','AEC','可靠性','mission-critical','认证'],
+   title:'车规零缺陷要求下的质量索赔与信任风险',
+   desc:'车规与 mission-critical 芯片对测试精度要求极高：一个逃逸缺陷的召回或客户索赔，动辄数倍于测试方案的采购额，且直接动摇客户对供应商的信任。',
+   implication:'客户为「避免一次召回」愿意支付的溢价，远高于为「多测几个参数」支付的价格——这是价值定价最重要的锚点之一。',
+   eco:'一次缺陷逃逸的召回 / 索赔成本 ≈ 测试方案采购额的 5~10 倍，是溢价空间的来源。'},
+  {id:'ramptime',   domain:'产能爬坡与交期',   leverId:'service',
+   kw:['扩产','爬坡','量产','交期','流片','窗口','time-to-market','产能'],
+   title:'产能爬坡窗口错失的机会成本',
+   desc:'新芯片量产的窗口期有限，测试方案交期每拖延一周，客户就损失一周的量产收入；扩产高峰期，供应商交付能力本身就是定价权。',
+   implication:'客户对「按时交付、快速换型」的支付意愿，等于延误期间损失的量产毛利；价值定价应锚定这一机会成本而非工时成本。',
+   eco:'经济价值 ≈ 该产品线单周毛利 × 交付提前周数；量产窗口延误 1 个月 ≈ 损失 1 个月毛利。'},
+  {id:'changeover', domain:'换型与机台利用率', leverId:'finalsol',
+   kw:['换型','多产品','小批量','切换','change kit','停机','换线','多品种'],
+   title:'频繁换型拉低测试产能利用率',
+   desc:'多产品线、小批量订单下，换型（change kit）时间直接影响测试机台利用率：换型越慢，固定测试成本分摊越重。',
+   implication:'换型时间每缩短 30 分钟，机台利用率与订单吞吐同步提升，客户的单位测试成本与报价竞争力都会受益。',
+   eco:'经济价值 ≈ 机台折旧与固定成本 × 利用率提升幅度；换型时间 -30% 通常对应机台利用率 +8~12%。'},
+  {id:'esd',        domain:'ESD 与污染防护',   leverId:'esdmats',
+   kw:['静电','ESD','防护','材料','污染','损伤','颗粒'],
+   title:'ESD 与污染损伤的隐性良率损耗',
+   desc:'静电与颗粒污染在搬运、测试环节造成的隐性损伤，常常在最终测试才暴露，表现为零星的良率波动与客诉，难以归因。',
+   implication:'这类「看不见」的损耗往往被归因于工艺，客户很少意识到专用材料投入的回报率——而这正是差异化材料定价的机会。',
+   eco:'经济价值 ≈ 年产量 × 可归因良率损失率 × 单颗毛利；材料投入的 ROI 通常远高于客户直觉。'},
+];
+const LEVER_LIBRARY = [
+  {id:'wafersol', title:'晶圆测试方案（探针卡）',  value:'提升 KGD 识别精度、防止缺陷逃逸，良率改善直接转化为每片晶圆的毛利提升与后端封装成本下降。'},
+  {id:'finalsol', title:'最终测试方案（测试座 / ATC / 换型套件）', value:'高吞吐与快速换型，缩短测试时间、提升机台利用率，摊薄单颗测试成本。'},
+  {id:'tooling',  title:'精密治具与高精度加工',    value:'结构完整性与电性能一致性，降低接触失效与重测成本，延长治具寿命、改善 TCO。'},
+  {id:'esdmats',  title:'ESD 防护与特种材料（KOLD / KAL / TKA）', value:'减少静电与污染损伤的隐性良率损耗，把不确定的客诉风险转化为可控的材料投入。'},
+  {id:'service',  title:'全球网络与本地化服务',    value:'产能爬坡期的快速交付与现场支持，帮客户抓住量产窗口，避免交期延误的机会成本。'},
+];
+const DEFAULT_SOLUTION = 'Knight Auto（KA Group）半导体测试解决方案：晶圆测试（探针卡）、最终测试（测试座 / ATC / 换型套件）、精密治具与 ESD 防护材料，帮助芯片设计与封测客户提升良率、缩短测试时间、降低单颗测试成本。';
+
+function generateSalesPlan(){
+  const company = document.getElementById('vp-company').value.trim();
+  if(!company){ toast('请先输入目标客户名称'); document.getElementById('vp-company').focus(); return; }
+  const industry = document.getElementById('vp-industry').value.trim();
+  const product = document.getElementById('vp-product').value.trim();
+  const chars = document.getElementById('vp-chars').value.trim();
+  const bg = document.getElementById('vp-bg').value.trim();
+  const solution = document.getElementById('vp-solution').value.trim() || DEFAULT_SOLUTION;
+
+  const hay = (industry + ' ' + product + ' ' + chars + ' ' + bg).toLowerCase();
+  const matched = PAIN_LIBRARY.map(p => {
+    let score = 0;
+    p.kw.forEach(k => { if(hay.includes(k)) score++; });
+    return {p, score};
+  }).filter(x => x.score > 0).sort((a,b) => b.score - a.score).map(x => x.p);
+  const defaults = PAIN_LIBRARY.filter(p => p.id === 'testcost' || p.id === 'tco');
+  defaults.forEach(p => { if(!matched.includes(p)) matched.push(p); });
+  const pains = matched.slice(0, 4);
+
+  const leverOf = id => LEVER_LIBRARY.find(l => l.id === id) || LEVER_LIBRARY[0];
+  const props = pains.map(p => ({pain: p, lever: leverOf(p.leverId)}));
+  const p1 = pains[0], lv1 = props[0].lever;
+
+  const situation = [
+    '贵司目前晶圆测试 / 最终测试环节的主要成本构成是怎样的（探针卡、测试座、测试时间、良率损失）？',
+    '现在每片晶圆的测试成本大约占单颗总成本多少比例？',
+    '测试治具（探针卡 / 测试座）目前的使用寿命、更换周期和失效停机情况如何？',
+  ];
+  const problem = pains.slice(0,3).map(p => '「' + p.title + '」——目前最让您头疼的具体表现是什么？大概多久发生一次、影响哪些环节？');
+  const implication = pains.slice(0,3).map(p => '「' + p.title + '」如果持续，对单颗成本、良率与报价空间的影响有多大？有没有量化数字（如良率点数、测试分钟数、索赔金额）？');
+  const payoff = props.slice(0,3).map(x => '如果通过「' + x.lever.title + '」把 ' + x.pain.domain + ' 的关键指标改善 20%，对您的单颗成本与毛利意味着什么？您愿意为这个改善付出多少？');
+
+  const path = [
+    {t:'桌面调研（1 天）', d:'财报 / 扩产计划 / 产品路线图 / 车规认证节点，锁定测试工程与采购关键人，判断量产时间表。'},
+    {t:'首次触达', d:'以「' + p1.title + '」为话题钩子：先给行业成本视角、再约会议，不做产品介绍。'},
+    {t:'首会（45 分钟）', d:'用 SPIN 清单收集测试成本结构：每片晶圆测试成本、良率、治具寿命、换型时间，为价值测算取数。'},
+    {t:'价值测算', d:'用客户自己的数据计算经济价值（良率 × 晶圆价 × 年量、测试成本降幅、TCO 改善），输出 ROI 一页纸。'},
+    {t:'报价与试点', d:'按创造价值的 20–30% 锚定报价，提供 4–6 周试跑（良率对比 / 换型演练）降低决策门槛。'},
+  ];
+  const research = [
+    '官网与产品路线图：产品线、封装类型、车规认证（AEC-Q100）进度',
+    '财报与新闻：扩产 / 资本开支、毛利率与 ASP 趋势，识别预算节奏',
+    'LinkedIn：测试工程 / 采购 / 设备部门关键决策人，寻找共同联系人',
+    '行业：SEMICON 展会动态、测试成本占比与设备景气度报告',
+    '二手信息：招聘（测试工程师扩编 = 扩产信号）、供应商与竞品公开信息',
+  ];
+
+  const models = [];
+  const ids = pains.map(p => p.id);
+  if(ids.includes('yield') || ids.includes('recall')) models.push('良率对赌 / 收益分成：按良率提升幅度或逃逸缺陷率目标定价，与客户共享价值');
+  if(ids.includes('testcost') || ids.includes('ramptime')) models.push('按片 / 按小时计费 + 年度框架协议：与测试产能利用率绑定，锁定爬坡期优先交付权');
+  if(ids.includes('tco') || ids.includes('changeover')) models.push('用量协议 + 阶梯价：按接触次数 / 换型次数计价，随客户产能增长享受阶梯折扣');
+  if(ids.includes('esd')) models.push('材料 + 服务打包订阅：以年度用量订阅替代单次采购，降低客户管理成本');
+  if(models.length < 2) models.push('模块化分项报价：治具 / 耗材 / 服务分开报价，保留调价与加购空间');
+  const modelsOut = models.slice(0,3);
+
+  lastPlan = {company, industry, product, chars, bg, solution, pains, props, situation, problem, implication, payoff, path, research, models: modelsOut};
+
+  const hyp = '「' + company + '」主营' + (product || '相关芯片 / 设备') + '，属于' + (industry || '半导体行业') + '。结合其产品特性与关键信号（' + (chars || '—') + '），我们判断其核心经济挑战集中在「' + p1.domain + '」：' + p1.title + '。建议以「' + lv1.title + '」作为价值切入点，先用客户自身的产能与成本数据量化经济价值，再以价值定价（而非成本加成）推进报价。';
+
+  const painHTML = pains.map((p,i) => `<div class="pain-card">
+      <div class="pain-title"><span class="pain-no">${i+1}</span>${p.title}<span class="vp-tag" style="margin-left:auto">${p.domain}</span></div>
+      <p>${p.desc}</p>
+      <p class="pain-impl">影响：${p.implication}</p>
+      <p class="pain-eco">📐 ${p.eco}</p>
+    </div>`).join('');
+
+  const propHTML = props.map(x => `<div class="prop-row">
+      <div class="prop-pain">${x.pain.title}</div>
+      <div class="prop-arrow">→</div>
+      <div class="prop-lever"><strong>${x.lever.title}</strong><p>${x.lever.value}</p></div>
+    </div>`).join('');
+
+  const spinGroups = [
+    {st:'情境 · Situation', qs: situation},
+    {st:'问题 · Problem', qs: problem},
+    {st:'影响 · Implication', qs: implication},
+    {st:'需求-收益 · Need-payoff', qs: payoff},
+  ];
+  const spinHTML = spinGroups.map(g => `<div class="spin-card"><div class="st">${g.st}</div><ul>${g.qs.map(q=>'<li>'+q+'</li>').join('')}</ul></div>`).join('');
+
+  const pathHTML = path.map((s,i) => `<div class="path-step"><span class="step-no">${i+1}</span><div><strong>${s.t}</strong><p>${s.d}</p></div></div>`).join('');
+
+  const researchHTML = research.map(r => `<span class="research-chip"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>${r}</span>`).join('');
+
+  const modelHTML = modelsOut.map(m => `<div style="font-size:13px;color:var(--ink-2);padding:6px 0;border-bottom:1px dashed #E4D9F2;display:flex;gap:8px"><span style="color:var(--brand-600);font-weight:700">▸</span>${m}</div>`).join('');
+
+  document.getElementById('vp-output').innerHTML = `
+    <div class="card-head"><h3>价值销售方案 · ${esc(company)}</h3><button class="btn-ghost" style="padding:6px 12px;font-size:12.5px" onclick="window.print()">打印 / PDF</button></div>
+    <div class="card-body">
+      <div class="out-section">
+        <h4>客户价值假设</h4>
+        <div class="callout">${hyp}</div>
+      </div>
+      <div class="out-section">
+        <h4>经济痛点（围绕成本与价值损失）</h4>
+        ${painHTML}
+      </div>
+      <div class="out-section">
+        <h4>价值主张映射 · 痛点 → 我方方案</h4>
+        ${propHTML}
+      </div>
+      <div class="out-section">
+        <h4>定价策略洞察 · Value-Based Pricing</h4>
+        <div class="pricing-grid">
+          <div class="price-card"><div class="st">经济价值量化</div><p><b>${p1.domain}</b>：${p1.eco}</p></div>
+          <div class="price-card"><div class="st">价值捕获建议</div><p>客户支付的不是「方案价格」而是「避免的损失 + 新增的毛利」；建议按估算经济价值的 <b>20–30%</b> 定价，并以客户现有供应商 / 自制成本为下限锚点。</p></div>
+          <div class="price-card"><div class="st">推荐定价模型</div>${modelHTML}</div>
+          <div class="price-card"><div class="st">谈判与锚点</div><p>先在首会量化「良率 +1% / 测试时间 -10% / 治具寿命 +40%」的经济价值再锚定报价；<b>分项报价</b>（治具 + 耗材 + 服务），把讨论焦点从「单价」拉回「单位产出成本」；客户的切换验证成本与车规认证壁垒就是溢价空间。</p></div>
+        </div>
+      </div>
+      <div class="out-section">
+        <h4>SPIN 提问清单（首会可直接使用）</h4>
+        <div class="spin-grid">${spinHTML}</div>
+      </div>
+      <div class="out-section">
+        <h4>销售切入路径</h4>
+        ${pathHTML}
+      </div>
+      <div class="out-section">
+        <h4>调研清单</h4>
+        ${researchHTML}
+      </div>
+    </div>`;
+  document.getElementById('vp-save-lead').style.display = 'inline-flex';
+  toast('价值销售方案已生成');
+}
+
+function saveLeadFromPlan(){
+  if(!lastPlan) return;
+  const p = lastPlan;
+  if(leads.some(l => l.company.toLowerCase() === p.company.toLowerCase())){
+    toast('该客户已在线索库中，未重复创建'); return;
+  }
+  leads.unshift({
+    id: newId(), company: p.company, contact: '待补充', title: '', email: '', phone: '',
+    industry: p.industry, region: '', source: '价值销售分析', stage: 'new', value: 0,
+    lastContact: today(), owner: '张晟',
+    painPoints: p.pains.map(x => x.title).join('；'),
+    notes: '由「价值定价」模块生成：' + p.pains[0].title + '，建议切入点：' + p.props[0].lever.title + '；定价建议：按创造价值 20–30% 锚定。',
+    createdAt: today(),
+  });
+  save(); renderAll();
+  toast('已保存为线索，可在「线索管理」中查看');
+}
+
+
+/* ================= AI 快速建档（规则引擎演示版） ================= */
+const AI_EXAMPLES = [
+  '英飞凌 Infineon，德国德累斯顿，SiC 功率器件扩产，车规认证，测试座寿命与接触阻抗问题，8 月安排方案演示，预计 42 万欧，联系人 Anna Hoffmann，采购副总裁',
+  '中芯国际 SMIC，上海，先进制程良率爬坡，探针卡交期与寿命问题，已进入需求确认，12 英寸扩产，预计 36 万欧，联系人 张伟，良率总监',
+  '通富微电 TFME，南通，多品种小批量换型频繁，机台利用率不足，换型套件需求，电话跟进中，预计 26 万欧，联系人 周强，测试厂长',
+];
+const COMPANY_KB = [
+  {names:['nxp','恩智浦'],                        display:'NXP Semiconductors',        type:'芯片设计 / IDM（车规）',        region:'荷兰 · 埃因霍温'},
+  {names:['qualcomm','高通'],                     display:'Qualcomm',                  type:'芯片设计（移动 / AI）',          region:'美国 · 圣地亚哥'},
+  {names:['huawei','华为'],                      display:'华为 Huawei',               type:'芯片设计（含海思）',              region:'中国 · 深圳'},
+  {names:['hisilicon','华为海思','海思'],         display:'华为海思 HiSilicon',        type:'芯片设计',                       region:'中国 · 深圳'},
+  {names:['infineon','英飞凌'],                   display:'Infineon Technologies',     type:'IDM（功率半导体）',              region:'德国 · 德累斯顿'},
+  {names:['tsmc','台积电'],                       display:'台积电 TSMC',               type:'晶圆代工 Foundry',               region:'中国台湾 · 新竹'},
+  {names:['smic','中芯国际'],                     display:'中芯国际 SMIC',             type:'晶圆代工 Foundry',               region:'中国 · 上海'},
+  {names:['华虹','hua hong','huahong'],           display:'华虹半导体 Hua Hong',       type:'晶圆代工 Foundry（功率 / 特色工艺）', region:'中国 · 上海'},
+  {names:['umc','联电'],                          display:'联电 UMC',                  type:'晶圆代工 Foundry',               region:'中国台湾 · 新竹'},
+  {names:['globalfoundries','格芯'],              display:'GlobalFoundries',           type:'晶圆代工 Foundry',               region:'美国 · 纽约马耳他'},
+  {names:['三星','samsung'],                      display:'三星 Foundry',              type:'晶圆代工 Foundry',               region:'韩国 · 华城'},
+  {names:['ase','日月光'],                        display:'日月光 ASE',                type:'OSAT 封测代工',                  region:'中国台湾 · 高雄'},
+  {names:['amkor'],                               display:'Amkor Technology',          type:'OSAT 封测代工',                  region:'美国 · 亚利桑那'},
+  {names:['jcet','长电科技','长电'],              display:'长电科技 JCET',             type:'OSAT 封测代工',                  region:'中国 · 江阴'},
+  {names:['tfme','通富微电','通富'],              display:'通富微电 TFME',             type:'OSAT 封测代工',                  region:'中国 · 南通'},
+  {names:['华天'],                                display:'华天科技',                  type:'OSAT 封测代工',                  region:'中国 · 天水'},
+  {names:['powertech','力成'],                    display:'力成科技 Powertech',        type:'OSAT 封测代工（存储）',          region:'中国台湾 · 新竹'},
+  {names:['spil','矽品'],                         display:'矽品精密 SPIL',             type:'OSAT 封测代工',                  region:'中国台湾 · 台中'},
+  {names:['naura','北方华创'],                    display:'北方华创 Naura',            type:'半导体设备制造',                  region:'中国 · 北京'},
+  {names:['amec','中微公司','中微'],              display:'中微公司 AMEC',             type:'半导体设备制造',                  region:'中国 · 上海'},
+  {names:['盛美','acm research'],                 display:'盛美上海 ACM Research',     type:'半导体设备制造',                  region:'中国 · 上海'},
+  {names:['拓荆','piotech'],                      display:'拓荆科技 Piotech',          type:'半导体设备制造',                  region:'中国 · 沈阳'},
+  {names:['应用材料','amat','applied materials'], display:'应用材料 AMAT',             type:'半导体设备制造',                  region:'美国 · 加州'},
+  {names:['泛林','lam research'],                 display:'泛林 Lam Research',         type:'半导体设备制造',                  region:'美国 · 加州'},
+  {names:['东京电子','tel','tokyo electron'],     display:'东京电子 TEL',              type:'半导体设备制造',                  region:'日本 · 东京'},
+  {names:['asml','阿斯麦'],                       display:'ASML',                      type:'半导体设备制造',                  region:'荷兰 · 费尔德霍芬'},
+  {names:['科磊','kla'],                          display:'科磊 KLA',                  type:'半导体设备制造',                  region:'美国 · 加州'},
+];
+
+function aiParse(text){
+  const t = String(text||'').trim();
+  const r = {company:'', contact:'', title:'', type:'', region:'', source:'', stage:'new', value:0, pain:'', notes:t};
+  if(!t) return r;
+  const low = t.toLowerCase();
+  // 1. 公司（知识库优先）
+  const hits = COMPANY_KB.filter(c => c.names.some(n => low.includes(n.toLowerCase())));
+  if(hits.length){
+    const c = hits.sort((a,b) => Math.max(...b.names.map(n=>n.length)) - Math.max(...a.names.map(n=>n.length)))[0];
+    r.company = c.display; r.type = c.type; r.region = c.region;
+  }
+  if(!r.company){
+    const m = t.match(/([\u4e00-\u9fa5A-Za-z0-9&.\- ]{2,24}?(?:公司|集团|科技|半导体|微电子|电子|GmbH|Inc\.?|Ltd\.?|Technologies|Systems|Semiconductor|Group|Corporation))/);
+    if(m) r.company = m[1].trim();
+  }
+  // 2. 联系人
+  const cm = t.match(/(?:联系人|联系|负责|对接|接待)[:：]?\s*([\u4e00-\u9fa5]{2,4})/);
+  let cm2 = t.match(/([A-Z][a-z]+(?:\s[A-Z][a-z]+){1,2})/);
+  if(cm2 && /director|manager|president|vp|cto|ceo|coo|cfo|engineer|test|ops|sales|procurement|operations|senior|chief|group|semiconductor/i.test(cm2[1])) cm2 = null;
+  if(cm) r.contact = cm[1]; else if(cm2) r.contact = cm2[1];
+  // 3. 职位
+  const tpat = [/(?:采购|供应链)?(?:副总裁|总经理|总监|总裁|厂长|部长|负责人)/, /(VP|Director|Manager|President|CTO|CEO|CFO|COO)/i];
+  for(const re of tpat){ const m = t.match(re); if(m){ r.title = m[0]; break; } }
+  // 4. 客户类型（知识库未覆盖时按关键词推断）
+  if(!r.type){
+    if(/晶圆代工|Foundry|foundry/.test(t)) r.type = '晶圆代工 Foundry';
+    else if(/封测|OSAT|osat|代工/.test(t)) r.type = 'OSAT 封测代工';
+    else if(/设备|equipment/.test(t)) r.type = '半导体设备制造';
+    else if(/芯片设计|fabless|IDM|idm|IC\s*设计/.test(t)) r.type = '芯片设计';
+  }
+  // 5. 地区（知识库未覆盖时按关键词推断）
+  if(!r.region){
+    const REGIONS = [['德累斯顿','德国 · 德累斯顿'],['慕尼黑','德国 · 慕尼黑'],['德国','德国'],['荷兰','荷兰'],['圣地亚哥','美国 · 圣地亚哥'],['美国','美国'],['新加坡','新加坡'],['高雄','中国台湾 · 高雄'],['新竹','中国台湾 · 新竹'],['台中','中国台湾 · 台中'],['台湾','中国台湾'],['江阴','中国 · 江阴'],['南通','中国 · 南通'],['西安','中国 · 西安'],['天水','中国 · 天水'],['上海','中国 · 上海'],['深圳','中国 · 深圳'],['北京','中国 · 北京'],['沈阳','中国 · 沈阳'],['韩国','韩国'],['日本','日本']];
+    for(const kv of REGIONS){ if(t.includes(kv[0])){ r.region = kv[1]; break; } }
+  }
+  // 6. 来源
+  if(/SEMICON|展会|展/.test(t)) r.source = 'SEMICON 展会';
+  else if(/转介绍|引荐|推荐/.test(t)) r.source = '转介绍';
+  else if(/LinkedIn|领英/.test(t)) r.source = 'LinkedIn';
+  else if(/官网|表单|网站/.test(t)) r.source = '官网表单';
+  else if(/电话|外呼/.test(t)) r.source = '电话外呼';
+  else if(/白皮书|文章|报告/.test(t)) r.source = '行业报告';
+  else if(/合作|渠道/.test(t)) r.source = '合作伙伴';
+  // 7. 阶段（用明确的阶段信号，避免“接触阻抗/联系人”误判）
+  if(/赢单|已签|签约|成交/.test(t)) r.stage = 'won';
+  else if(/谈判|报价|定标|商务|压价/.test(t)) r.stage = 'negotiation';
+  else if(/演示|方案|POC|试跑/.test(t)) r.stage = 'demo';
+  else if(/需求确认|已确认|评审通过|qualified/.test(t)) r.stage = 'qualified';
+  else if(/首轮|初次接触|初接触|电话跟进|已联系|正在跟进/.test(t)) r.stage = 'contacted';
+  // 8. 金额
+  let val = 0;
+  const vWan = t.match(/([\d][\d,.]*)\s*万欧/);
+  const vEur = t.match(/(?:€|EUR|欧)\s*([\d][\d,.]*)\s*([KkMm万])?/);
+  const vK = t.match(/([\d][\d,.]*)\s*([Kk])\b/);
+  if(vWan) val = parseFloat(vWan[1].replace(/,/g,'')) * 10000;
+  else if(vEur){ val = parseFloat(vEur[1].replace(/,/g,'')); if(vEur[2]){ if(/[Mm]/.test(vEur[2])) val *= 1e6; if(/[Kk]/.test(vEur[2])) val *= 1000; if(vEur[2]==='万') val *= 10000; } }
+  else if(vK) val = parseFloat(vK[1].replace(/,/g,'')) * 1000;
+  r.value = Math.round(val);
+  // 9. 痛点（优先抓“问题/诉求”前的从句；避免“已进入”等连接词）
+  let pain = '';
+  const pm = t.match(/([^，。；：:\n]{2,24}?)(?:问题|困扰|痛点|诉求|需求)[:：]?/);
+  if(pm){
+    const clause = pm[1].trim();
+    if(!/^(已|正在|即将|进入|进行|安排|预计|计划|准备|考虑|我们|客户|希望|想)/.test(clause)) pain = clause;
+  }
+  if(!pain){
+    const kw = ['良率','测试成本','测试时间','寿命','交期','换型','缺陷','漏检','索赔','ESD','产能','停机','接触阻抗','车规','成本'];
+    const found = kw.filter(k => t.includes(k));
+    if(found.length) pain = found.slice(0,3).join('；');
+  }
+  r.pain = pain;
+  return r;
+}
+
+function aiGenerate(){
+  const text = document.getElementById('ai-input').value.trim();
+  if(!text){ toast('请先输入线索描述'); return; }
+  const btn = document.getElementById('ai-run');
+  const old = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '⏳ AI 正在识别字段…';
+  setTimeout(() => {
+    const r = aiParse(text);
+    let filled = 0;
+    const set = (id, v) => { if(v){ document.getElementById(id).value = v; filled++; } };
+    set('f-company', r.company);
+    set('f-contact', r.contact);
+    set('f-title', r.title);
+    set('f-industry', r.type);
+    set('f-region', r.region);
+    if(r.source && SOURCES.includes(r.source)){ document.getElementById('f-source').value = r.source; filled++; }
+    if(STAGES.some(s => s.key === r.stage)){ document.getElementById('f-stage').value = r.stage; filled++; }
+    if(r.value > 0){ document.getElementById('f-value').value = r.value; filled++; }
+    set('f-pain', r.pain);
+    document.getElementById('f-notes').value = r.notes; filled++;
+    btn.disabled = false; btn.innerHTML = old;
+    toast('✨ AI 已自动填入 ' + filled + ' 个字段，确认无误后点击「保存线索」');
+  }, 550);
+}
+
+function aiExample(i){
+  document.getElementById('ai-input').value = AI_EXAMPLES[i] || '';
+}
+
+/* ================= 价值报价 ================= */
+function num(id, fallback=0){ const v = Number(document.getElementById(id)?.value); return Number.isFinite(v) ? v : fallback; }
+const QUOTE_LS_KEY = 'knightAutoCrmQuoteHistoryV1';
+let quoteHistory = loadQuoteHistory();
+function loadQuoteHistory(){ try{ const raw = localStorage.getItem(QUOTE_LS_KEY); const d = raw ? JSON.parse(raw) : []; return Array.isArray(d) ? d : []; }catch(e){ return []; } }
+function saveQuoteHistory(){ try{ localStorage.setItem(QUOTE_LS_KEY, JSON.stringify(quoteHistory)); }catch(e){} }
+function quoteCalc(){
+  const company = document.getElementById('q-company')?.value.trim() || '目标客户';
+  const type = document.getElementById('q-type')?.value || '半导体客户';
+  const competitorName = document.getElementById('q-competitor-name')?.value.trim() || '竞争对手';
+  const competitor = Math.max(0, num('q-competitor', 300000));
+  const base = Math.max(0, num('q-base', 240000));
+  const score = Math.min(100, Math.round((num('q-tech') + num('q-local') + num('q-speed') + num('q-service') + num('q-advisory')) / 25 * 100));
+  const competitorScore = Math.min(100, Math.round((num('qc-tech') + num('qc-local') + num('qc-speed') + num('qc-service') + num('qc-advisory')) / 25 * 100));
+  const floor = Math.max(base, competitor * .82);
+  const basePrice = Math.round(floor / 1000) * 1000;
+  const performance = Math.round(Math.max(basePrice * 1.12, competitor * 1.05) / 1000) * 1000;
+  const strategic = Math.round(Math.max(performance * 1.22, competitor * 1.28) / 1000) * 1000;
+  return {company,type,competitorName,competitor,base,score,competitorScore,valueIndex:Math.max(0,Math.min(100,score)),basePrice,performance,strategic};
+}
+function renderQuote(){
+  const {company,type,competitorName,competitor,competitorScore,valueIndex,basePrice,performance,strategic} = quoteCalc();
+  const fmt = v => fmtW(v);
+  const content = [
+    '标准化方案：单一产品 / 治具交付、标准验收、基础质保',
+    '性能方案：标准方案 + 现场调试、快速换型 / 工程支持、延长寿命目标',
+    '战略方案：完整测试解决方案 + 共同工程、量产爬坡支持、优先交付与年度服务'
+  ];
+  const tiers = [
+    {name:'基础报价', price:basePrice, tone:'', desc:'适合价格敏感、需求边界清晰的项目', items:['标准产品与技术规格','标准交期与验收','基础质保']},
+    {name:'高阶报价', price:performance, tone:'recommended', desc:'适合已验证价值、存在交付或 TCO 痛点的项目', items:['基础方案全部内容','工程调试与现场支持','快速交付 / 换型优化','性能与寿命目标']},
+    {name:'战略合作报价', price:strategic, tone:'', desc:'适合关键客户、扩产与高风险量产窗口', items:['高阶方案全部内容','共同工程与咨询','优先产能 / 全球响应','年度服务与量产保障']}
+  ];
+  const factorNote = valueIndex >= 75 ? '价值信号较强：可以把报价从“产品单价”升级为“量产风险与单位产出成本”的讨论。' : valueIndex >= 50 ? '价值信号中等：建议先用高阶方案试探支付意愿，并保留基础方案作为价格锚点。' : '价值信号偏弱：先补充客户的测试成本、停机损失和交付窗口数据，再扩大溢价。';
+  const x = v => Math.max(6, Math.min(94, Math.round(v)));
+  const y = v => Math.max(8, Math.min(92, Math.round((v / Math.max(strategic * 1.15, 1)) * 100)));
+  const tierHTML = tiers.map(t => `<div class="tier-card ${t.tone}"><h5>${t.name}</h5><div class="tier-price">${fmt(t.price)}</div><p>${t.desc}</p><ul>${t.items.map(i=>'<li>'+i+'</li>').join('')}</ul></div>`).join('');
+  const records = quoteHistory.filter(r => r.company === company).sort((a,b) => b.createdAt - a.createdAt);
+  const historyHTML = records.length ? records.map(r => `<div class="quote-record"><div><strong>${esc(r.quoteLabel || '本次报价')} · ${fmt(r.currentPrice)}</strong><span>${new Date(r.createdAt).toLocaleString('zh-CN')} · 竞争对手 ${esc(r.competitorName)} / ${fmt(r.competitorPrice)}</span></div><div><button onclick="loadQuoteRecord('${r.id}')">载入</button><button class="quote-delete" onclick="deleteQuoteRecord('${r.id}')">删除</button></div></div>`).join('') : '<div class="muted" style="font-size:12px">该客户还没有报价记录。保存后会在这里形成独立报价记录，不会改动 CRM 成交金额。</div>';
+  document.getElementById('quote-output').innerHTML = `
+    <div class="card-head"><h3>价值报价策略 · ${esc(company)}</h3><span class="hint">${esc(type)}</span></div>
+    <div class="card-body">
+      <div class="quote-summary">
+        <div class="quote-metric"><span>综合价值指数</span><strong>${valueIndex} / 100</strong></div>
+        <div class="quote-metric"><span>${esc(competitorName)}报价 / 价值指数</span><strong>${fmt(competitor)} · ${competitorScore}</strong></div>
+        <div class="quote-metric"><span>建议报价区间</span><strong>${fmt(basePrice)} – ${fmt(strategic)}</strong></div>
+      </div>
+      <div class="callout">${factorNote}<br><span style="font-size:12px;color:var(--ink-2)">价值因子来自 Knight Auto 官网所强调的精密工程、测试解决方案、全球网络与本地化响应；实际报价仍需由销售补充客户数据。</span></div>
+      <div class="out-section"><h4>三档报价策略</h4><div class="quote-tier-grid">${tierHTML}</div></div>
+      <div class="out-section"><h4>报价内容与价值对应</h4>
+        <div class="prop-row"><div class="prop-pain">客户购买的内容</div><div class="prop-arrow">→</div><div class="prop-lever"><strong>${content[0]}</strong><p>用基础报价建立价格锚点，避免一开始把高价值服务免费送出。</p></div></div>
+        <div class="prop-row"><div class="prop-pain">客户购买的改善</div><div class="prop-arrow">→</div><div class="prop-lever"><strong>${content[1]}</strong><p>把交付速度、现场服务、换型效率和治具寿命写入验收指标。</p></div></div>
+        <div class="prop-row"><div class="prop-pain">客户购买的确定性</div><div class="prop-arrow">→</div><div class="prop-lever"><strong>${content[2]}</strong><p>针对扩产与关键量产窗口，以风险降低、优先响应和工程协同捕获溢价。</p></div></div>
+      </div>
+      <div class="matrix-wrap"><div class="matrix-title">竞争定位矩阵</div>
+        <div class="matrix">
+          <div class="matrix-dot competitor" style="left:${x(competitorScore)}%;bottom:${y(competitor)}%"><span>${esc(competitorName)}</span></div>
+          <div class="matrix-dot ka" style="left:${x(valueIndex)}%;bottom:${y(basePrice)}%"><span>Knight Auto · 当前</span></div>
+        </div>
+        <div class="matrix-legend"><span><i style="background:#98A2B3"></i>竞争对手报价</span><span><i style="background:var(--brand-600)"></i>Knight Auto 报价</span><span>横轴：技术、交付与服务价值综合评分</span></div>
+      </div>
+      <div class="quote-history"><h5>该客户的报价历史 · ${records.length} 次</h5>${historyHTML}</div>
+    </div>`;
+}
+
+function saveQuoteRecord(){
+  const q = quoteCalc();
+  const record = {
+    id:'Q-'+Date.now(), createdAt:Date.now(), company:q.company, type:q.type,
+    competitorName:q.competitorName, competitorPrice:q.competitor, competitorScore:q.competitorScore,
+    currentPrice:q.basePrice, performancePrice:q.performance, strategicPrice:q.strategic,
+    valueIndex:q.valueIndex, quoteLabel:'当前报价',
+    factors:{tech:num('q-tech'),local:num('q-local'),speed:num('q-speed'),service:num('q-service'),advisory:num('q-advisory'),
+      cTech:num('qc-tech'),cLocal:num('qc-local'),cSpeed:num('qc-speed'),cService:num('qc-service'),cAdvisory:num('qc-advisory')}
+  };
+  quoteHistory.unshift(record);
+  saveQuoteHistory();
+  renderQuote();
+  toast('已保存本次报价记录；CRM 成交金额未改变');
+}
+
+function loadQuoteRecord(id){
+  const r = quoteHistory.find(x => x.id === id);
+  if(!r) return;
+  document.getElementById('q-company').value = r.company || '';
+  document.getElementById('q-type').value = r.type || '芯片设计 / IDM';
+  document.getElementById('q-competitor-name').value = r.competitorName || '竞争对手';
+  document.getElementById('q-competitor').value = r.competitorPrice || 0;
+  document.getElementById('q-base').value = r.currentPrice || 0;
+  const f = r.factors || {};
+  [['q-tech',f.tech],['q-local',f.local],['q-speed',f.speed],['q-service',f.service],['q-advisory',f.advisory],['qc-tech',f.cTech],['qc-local',f.cLocal],['qc-speed',f.cSpeed],['qc-service',f.cService],['qc-advisory',f.cAdvisory]].forEach(([id,v]) => { if(v != null) document.getElementById(id).value = v; });
+  renderQuote();
+  toast('已载入报价记录，可继续调整后另存为新版本');
+}
+
+function deleteQuoteRecord(id){
+  const r = quoteHistory.find(x => x.id === id);
+  if(!r) return;
+  if(!confirm('确定删除这条报价记录吗？删除后无法恢复。')) return;
+  quoteHistory = quoteHistory.filter(x => x.id !== id);
+  saveQuoteHistory();
+  renderQuote();
+  toast('报价记录已删除');
+}
+
+/* ================= 初始化 ================= */
+function populateSelects(){
+  const stageSel = document.getElementById('filter-stage');
+  stageSel.innerHTML = '<option value="all">全部阶段</option>' + STAGES.map(s => `<option value="${s.key}">${s.label}</option>`).join('');
+  const srcSel = document.getElementById('filter-source');
+  srcSel.innerHTML = '<option value="all">全部来源</option>' + SOURCES.map(s => `<option value="${s}">${s}</option>`).join('');
+  document.getElementById('f-source').innerHTML = SOURCES.map(s => `<option value="${s}">${s}</option>`).join('');
+  document.getElementById('f-stage').innerHTML = STAGES.map(s => `<option value="${s.key}">${s.label}（${s.prob}%）</option>`).join('');
+}
+
+function renderAll(){ renderDashboard(); renderLeads(); }
+
+(function init(){
+  populateSelects();
+  renderAll();
+  renderQuote();
+  const d = new Date();
+  document.getElementById('today-chip').textContent = d.toLocaleDateString('zh-CN', {year:'numeric', month:'long', day:'numeric', weekday:'long'});
+})();
+</script>
+</body>
+</html>
